@@ -9,36 +9,30 @@
   (vec (take ncols (repeatedly #(rand-row nrows)))))
 
 (defn setup []
-  (let [
-        cols 64
-        rows 64
-        ]
+  (let [cols 32
+        rows 32]
     
-  ; Set frame rate to 30 frames per second.
-  (q/frame-rate 30)
-  ; Set color mode to HSB (HSV) instead of default RGB.
-  (q/color-mode :hsb)
-  ; setup function returns initial state. It contains
-  ; circle color and position.
-  {:cols cols
-   :rows rows
-   :board (rand-board cols rows)
-   }))
+    ;; Set frame rate to 30 frames per second.
+    (q/frame-rate 30)
 
-(defn x-no-overflow [state x]
-  (if (>= x (:cols state))
-    (- (:cols state) 1)
-    (if (< x 0) 0 x)))
+    ;; Set color mode to HSB (HSV) instead of default RGB.
+    (q/color-mode :hsb)
+    
+    ;; setup function returns initial state object
+    {:cols cols
+     :rows rows
+     :board (rand-board cols rows)}))
 
-(defn y-no-overflow [state y]
-  (if (>= y (:rows state))
-    (- (:rows state) 1)
-    (if (< y 0) 0 y)))
+(defn x-overflow? [state x]
+  (or (>= x (:cols state)) (< x 0)))
+
+(defn y-overflow? [state y]
+  (or (>= y (:rows state)) (< y 0)))
   
 (defn board-pos-val [state x y]
-  (get
-   (get (:board state) (x-no-overflow state x))
-   (y-no-overflow state y)))
+  (if (not (or (x-overflow? state x) (y-overflow? state y)))
+    (get (get (:board state) x) y)
+    0))
 
 (defn neighbor-count [state x y]
   (+
@@ -121,9 +115,9 @@
   )
 
 (defn -main [& args]
-  (q/defsketch conwaylife
+  (q/defsketch gameoflife
     :title "You spin my circle right round"
-    :size [1000 1000]
+    :size [500 500]
     ; setup function called only once, during sketch initialization.
     :setup setup
     ; update-state is called on each iteration before draw-state.
